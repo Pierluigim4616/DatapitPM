@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Telemetría Temperatura - DataPitPM</title>
   <style>
     body {
@@ -34,8 +34,8 @@
     }
 
     .rect {
-      width: 80px;
-      height: 120px;
+      width: 120px;    /* Ancho mayor para rectángulo acostado */
+      height: 80px;    /* Alto menor */
       border-radius: 8px;
       margin-bottom: 10px;
       transition: background-color 0.5s;
@@ -91,11 +91,11 @@
     const readAPIKey = '9HSRGKSIHYRQ5P32';
 
     function getColor(temp) {
-      if (temp < 40) return '#00f'; // azul
-      if (temp < 60) return '#0ff'; // celeste
-      if (temp < 80) return '#0f0'; // verde
-      if (temp < 95) return '#ff0'; // amarillo
-      return '#f00';               // rojo
+      if (temp < 40) return '#00f';   // azul
+      if (temp < 60) return '#0ff';   // celeste
+      if (temp < 80) return '#0f0';   // verde
+      if (temp < 95) return '#ff0';   // amarillo
+      return '#f00';                  // rojo
     }
 
     function updateUI(data) {
@@ -129,11 +129,10 @@
       }
     }
 
-    // Primer carga
     fetchData();
-    // Actualiza cada 5 segundos
     setInterval(fetchData, 5000);
   </script>
 
 </body>
 </html>
+
