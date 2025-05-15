@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>DataPitPM - Telemetría Neumáticos</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #00ff88;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 30px;
+    }
+    .temp {
+      font-size: 2rem;
+      margin: 10px 0;
+    }
+    .label {
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <h1>📟 Telemetría Temperatura - DataPitPM</h1>
+  <div class="temp">DI (Del. Izq.): <span id="DI">--</span> °C</div>
+  <div class="temp">DD (Del. Der.): <span id="DD">--</span> °C</div>
+  <div class="temp">TI (Tras. Izq.): <span id="TI">--</span> °C</div>
+  <div class="temp">TD (Tras. Der.): <span id="TD">--</span> °C</div>
+
+  <p class="label">Actualizando cada 5 segundos desde ThingSpeak...</p>
+
+  <script>
+    const channelId = "2964528";
+    const apiKey = "9HSRGKSIHYRQ5P32";
+
+    async function getData() {
+      try {
+        const res = await fetch(`https://api.thingspeak.com/channels/${channelId}/feeds/last.json?api_key=${apiKey}`);
+        const data = await res.json();
+
+        document.getElementById("DI").innerText = parseFloat(data.field1).toFixed(1);
+        document.getElementById("DD").innerText = parseFloat(data.field2).toFixed(1);
+        document.getElementById("TI").innerText = parseFloat(data.field3).toFixed(1);
+        document.getElementById("TD").innerText = parseFloat(data.field4).toFixed(1);
+      } catch (e) {
+        console.error("Error al obtener datos de ThingSpeak:", e);
+      }
+    }
+
+    setInterval(getData, 5000); // Actualizar cada 5s
+    getData(); // Llamar al iniciar
+  </script>
+</body>
+</html>
