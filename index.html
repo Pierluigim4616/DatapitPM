@@ -1,120 +1,139 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Telemetría Neumáticos</title>
+  <title>Telemetría Temperatura - DataPitPM</title>
   <style>
     body {
-      background-color: #111;
-      color: #fff;
+      background-color: #000;
+      color: white;
       font-family: Arial, sans-serif;
       text-align: center;
-      padding: 20px;
     }
 
     h1 {
-      margin-bottom: 40px;
-      font-size: 28px;
+      color: #00FFAA;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      grid-gap: 20px;
-      max-width: 400px;
-      margin: 0 auto;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      justify-content: center;
+      max-width: 600px;
+      margin: 30px auto;
     }
 
-    .tire {
-      background-color: #333;
+    .wheel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       padding: 10px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px #000;
-      transition: background-color 0.3s;
+      border-radius: 10px;
+      background-color: #111;
+    }
+
+    .rect {
+      width: 80px;
+      height: 120px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      transition: background-color 0.5s;
     }
 
     .label {
-      margin-bottom: 8px;
-      font-size: 16px;
       font-weight: bold;
+      margin-bottom: 5px;
     }
 
-    .value {
+    .temp {
       font-size: 20px;
-      font-weight: bold;
     }
 
-    footer {
+    .footer {
       margin-top: 30px;
+      font-size: 14px;
       color: #888;
     }
   </style>
 </head>
 <body>
-  <h1>📟 Telemetría de Temperaturas</h1>
+
+  <h1>📟 Telemetría Temperatura - DataPitPM</h1>
 
   <div class="grid">
-    <div class="tire" id="boxDI">
+    <div class="wheel">
       <div class="label">DI (Del. Izq.)</div>
-      <div class="value" id="DI">-- °C</div>
+      <div id="rect-di" class="rect"></div>
+      <div id="temp-di" class="temp">-- °C</div>
     </div>
-    <div class="tire" id="boxDD">
+    <div class="wheel">
       <div class="label">DD (Del. Der.)</div>
-      <div class="value" id="DD">-- °C</div>
+      <div id="rect-dd" class="rect"></div>
+      <div id="temp-dd" class="temp">-- °C</div>
     </div>
-    <div class="tire" id="boxTI">
+    <div class="wheel">
       <div class="label">TI (Tras. Izq.)</div>
-      <div class="value" id="TI">-- °C</div>
+      <div id="rect-ti" class="rect"></div>
+      <div id="temp-ti" class="temp">-- °C</div>
     </div>
-    <div class="tire" id="boxTD">
+    <div class="wheel">
       <div class="label">TD (Tras. Der.)</div>
-      <div class="value" id="TD">-- °C</div>
+      <div id="rect-td" class="rect"></div>
+      <div id="temp-td" class="temp">-- °C</div>
     </div>
   </div>
 
-  <footer>
-    Actualizando cada 5 segundos desde ThingSpeak...
-  </footer>
+  <div class="footer">Actualizando cada 5 segundos desde ThingSpeak...</div>
 
   <script>
-    const channelId = "2964528";
-    const apiKey = "9HSRGKSIHYRQ5P32";
+    const channelID = '2964528';
+    const readAPIKey = '9HSRGKSIHYRQ5P32';
 
     function getColor(temp) {
-      if (temp <= 30) return "#0088ff";         // Azul
-      if (temp <= 59) return "#00ffff";         // Celeste
-      if (temp <= 80) return "#00ff00";         // Verde
-      if (temp <= 94) return "#ffaa00";         // Naranja
-      return "#ff0000";                         // Rojo
+      if (temp < 40) return '#00f'; // azul
+      if (temp < 60) return '#0ff'; // celeste
+      if (temp < 80) return '#0f0'; // verde
+      if (temp < 95) return '#ff0'; // amarillo
+      return '#f00';               // rojo
     }
 
-    async function getData() {
-      try {
-        const res = await fetch(`https://api.thingspeak.com/channels/${channelId}/feeds/last.json?api_key=${apiKey}`);
-        const data = await res.json();
+    function updateUI(data) {
+      const temps = [
+        { id: 'di', value: parseFloat(data.field1) },
+        { id: 'dd', value: parseFloat(data.field2) },
+        { id: 'ti', value: parseFloat(data.field3) },
+        { id: 'td', value: parseFloat(data.field4) }
+      ];
 
-        const values = {
-          DI: parseFloat(data.field1),
-          DD: parseFloat(data.field2),
-          TI: parseFloat(data.field3),
-          TD: parseFloat(data.field4),
-        };
-
-        for (let key in values) {
-          const value = values[key].toFixed(1);
-          const color = getColor(values[key]);
-
-          document.getElementById(key).innerText = `${value} °C`;
-          document.getElementById("box" + key).style.backgroundColor = color;
+      temps.forEach(t => {
+        const tempText = document.getElementById(`temp-${t.id}`);
+        const rect = document.getElementById(`rect-${t.id}`);
+        if (!isNaN(t.value)) {
+          tempText.textContent = `${t.value.toFixed(1)} °C`;
+          rect.style.backgroundColor = getColor(t.value);
+        } else {
+          tempText.textContent = '-- °C';
+          rect.style.backgroundColor = '#444';
         }
+      });
+    }
 
-      } catch (error) {
-        console.error("Error al obtener datos de ThingSpeak:", error);
+    async function fetchData() {
+      try {
+        const res = await fetch(`https://api.thingspeak.com/channels/${channelID}/feeds/last.json?api_key=${readAPIKey}`);
+        const data = await res.json();
+        updateUI(data);
+      } catch (e) {
+        console.error('Error al obtener datos:', e);
       }
     }
 
-    setInterval(getData, 5000);
-    getData();
+    // Primer carga
+    fetchData();
+    // Actualiza cada 5 segundos
+    setInterval(fetchData, 5000);
   </script>
+
 </body>
 </html>
