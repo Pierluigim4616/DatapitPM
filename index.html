@@ -2,56 +2,119 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>DataPitPM - Telemetría Neumáticos</title>
+  <title>Telemetría Neumáticos</title>
   <style>
     body {
-      background-color: #121212;
-      color: #00ff88;
+      background-color: #111;
+      color: #fff;
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 20px;
     }
+
     h1 {
-      margin-bottom: 30px;
+      margin-bottom: 40px;
+      font-size: 28px;
     }
-    .temp {
-      font-size: 2rem;
-      margin: 10px 0;
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-gap: 20px;
+      max-width: 400px;
+      margin: 0 auto;
     }
+
+    .tire {
+      background-color: #333;
+      padding: 10px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px #000;
+      transition: background-color 0.3s;
+    }
+
     .label {
-      color: #aaa;
+      margin-bottom: 8px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .value {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    footer {
+      margin-top: 30px;
+      color: #888;
     }
   </style>
 </head>
 <body>
-  <h1>📟 Telemetría Temperatura - DataPitPM</h1>
-  <div class="temp">DI (Del. Izq.): <span id="DI">--</span> °C</div>
-  <div class="temp">DD (Del. Der.): <span id="DD">--</span> °C</div>
-  <div class="temp">TI (Tras. Izq.): <span id="TI">--</span> °C</div>
-  <div class="temp">TD (Tras. Der.): <span id="TD">--</span> °C</div>
+  <h1>📟 Telemetría de Temperaturas</h1>
 
-  <p class="label">Actualizando cada 5 segundos desde ThingSpeak...</p>
+  <div class="grid">
+    <div class="tire" id="boxDI">
+      <div class="label">DI (Del. Izq.)</div>
+      <div class="value" id="DI">-- °C</div>
+    </div>
+    <div class="tire" id="boxDD">
+      <div class="label">DD (Del. Der.)</div>
+      <div class="value" id="DD">-- °C</div>
+    </div>
+    <div class="tire" id="boxTI">
+      <div class="label">TI (Tras. Izq.)</div>
+      <div class="value" id="TI">-- °C</div>
+    </div>
+    <div class="tire" id="boxTD">
+      <div class="label">TD (Tras. Der.)</div>
+      <div class="value" id="TD">-- °C</div>
+    </div>
+  </div>
+
+  <footer>
+    Actualizando cada 5 segundos desde ThingSpeak...
+  </footer>
 
   <script>
     const channelId = "2964528";
     const apiKey = "9HSRGKSIHYRQ5P32";
+
+    function getColor(temp) {
+      if (temp <= 30) return "#0088ff";         // Azul
+      if (temp <= 59) return "#00ffff";         // Celeste
+      if (temp <= 80) return "#00ff00";         // Verde
+      if (temp <= 94) return "#ffaa00";         // Naranja
+      return "#ff0000";                         // Rojo
+    }
 
     async function getData() {
       try {
         const res = await fetch(`https://api.thingspeak.com/channels/${channelId}/feeds/last.json?api_key=${apiKey}`);
         const data = await res.json();
 
-        document.getElementById("DI").innerText = parseFloat(data.field1).toFixed(1);
-        document.getElementById("DD").innerText = parseFloat(data.field2).toFixed(1);
-        document.getElementById("TI").innerText = parseFloat(data.field3).toFixed(1);
-        document.getElementById("TD").innerText = parseFloat(data.field4).toFixed(1);
-      } catch (e) {
-        console.error("Error al obtener datos de ThingSpeak:", e);
+        const values = {
+          DI: parseFloat(data.field1),
+          DD: parseFloat(data.field2),
+          TI: parseFloat(data.field3),
+          TD: parseFloat(data.field4),
+        };
+
+        for (let key in values) {
+          const value = values[key].toFixed(1);
+          const color = getColor(values[key]);
+
+          document.getElementById(key).innerText = `${value} °C`;
+          document.getElementById("box" + key).style.backgroundColor = color;
+        }
+
+      } catch (error) {
+        console.error("Error al obtener datos de ThingSpeak:", error);
       }
     }
 
-    setInterval(getData, 5000); // Actualizar cada 5s
-    getData(); // Llamar al iniciar
+    setInterval(getData, 5000);
+    getData();
   </script>
 </body>
 </html>
